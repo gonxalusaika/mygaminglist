@@ -1,6 +1,8 @@
 import CreateWanted from './CreateWanted';
 import WantedList from './WantedList';
 
+var Router = ReactRouter.Router, Route = ReactRouter.Route;
+
 module.exports = class ApolloApp extends React.Component {
 	constructor(props){
 		super(props);
@@ -8,7 +10,7 @@ module.exports = class ApolloApp extends React.Component {
 		this.updateItems = this.updateItems.bind(this);
 	}
 	componentDidMount(){
-		fetch('/api/v1/games')
+		fetch('/api/v1/games/recent')
 			.then(result => {
 				return result.json();
 			})

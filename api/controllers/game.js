@@ -1,5 +1,6 @@
 var Game = require('../models').Game;
 var api = require('../services/GamesDbScrapper');
+var authorization = require('../services/Authentication');
 
 createGame = function(apiGame){
 	console.log(apiGame);
@@ -15,24 +16,24 @@ module.exports = function(app){
 	//Returns all games that match :name querying thegamesdb api
 	app.get('/games/extra/:name', function(req, res){
 		api.gameList(req.params.name)
-			.then(function(result){
+			.then((result) => {
 				res.json(result);
-				result.Data.Game.forEach(function(apiGame){
+				result.Data.Game.forEach((apiGame) => {
 					createGame(apiGame);
 				});
 			})
-			.catch(function(reason){
+			.catch((reason) => {
 				console.log(reason);
-				res.json({error: "Error getting info from external api"});
+				res.json({error: "Error getting info from external api"}).status(500);
 			});
 	});
 
 	app.post('/games', function(req, res){
 		Game.create(req.body)
-			.then(function(result){
+			.then((result) => {
 				res.json(result);
 			})
-			.catch(function(reason){
+			.catch((reason) => {
 				console.log(reason);
 				res.json(reason);
 			});
@@ -45,8 +46,22 @@ module.exports = function(app){
 		Game.findAll({
 			attributes: ['id', 'name', 'cover'],
 			where: filter
-		}).then(function(gameList){
+		}).then((gameList) => {
 			res.json(gameList);
+		})
+		.catch((reason) => {
+			console.log(reason);
+			res.json(reason).status(500);
+		});
+	});
+
+	app.get('/games/recent', function(req, res){
+		Game.findAll({
+			attributes: ['id', 'name', 'cover'],
+			order: 'updatedAt DESC',
+			limit: 10
+		}).then((games) => {
+			res.json(games);
 		});
 	});
 }

@@ -28,6 +28,8 @@
     "sequelize": "^3.26.0",
     "tedious": "^1.14.0",
     "request": "~2.79.0",
-    "xml2js": "~0.4.17"
+    "xml2js": "~0.4.17",
+    "bcrypt-nodejs": "0.0.3",
+    "jsonwebtoken": "~7.3.0"
   }
 }

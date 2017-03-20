@@ -1,4 +1,4 @@
-var scrapper = require('../../../api/services/GamesDbScrapper');
+var scrapper = require('../../api/services/GamesDbScrapper');
 
 scrapper.gameList('Doom')
 	.then(function(result){

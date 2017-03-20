@@ -2,28 +2,7 @@ var fs        = require("fs");
 var path      = require("path");
 var Sequelize = require("sequelize");
 var env       = process.env.NODE_ENV || "development";
-// var config    = require(path.join(__dirname, '..', 'config', 'config.json'))[env];
-
-// var config = {
-//   database: 'prueba',
-//   username: 'sa',
-//   password: 'sa',
-//   host: 'localhost',
-//   dialect: 'mssql',
-//   pool: {
-//     max: 5,
-//     min: 0,
-//     idle: 10000
-//   }
-// }
-
-var config = {
-  database: 'database',
-  username: 'username',
-  password: 'password',
-  dialect: 'sqlite',
-  storage: './db.development.sqlite'
-}
+var config    = require('../../config').database[env];
 
 if (process.env.DATABASE_URL) {
   var sequelize = new Sequelize(process.env.DATABASE_URL);

@@ -1,51 +1,61 @@
-var Game = require('../models').Game;
+var User = require('../models').User;
+var bCrypt = require('bcrypt-nodejs');
+var authentication = require('../services/Authentication');
 
-createGame = function(apiGame){
-	console.log(apiGame);
-	Game.create({
-		name: apiGame.GameTitle[0],
-		apiId: apiGame.id[0],
-		cover: 'http://thegamesdb.net/banners/clearlogo/' + apiGame.id[0] + '.png'
-	});
+var isValidPassword = function(user, password){
+  return bCrypt.compareSync(password, user.password);
+}
+var createHash = function(password){
+ return bCrypt.hashSync(password, bCrypt.genSaltSync(10), null);
 }
 
 module.exports = function(app){
 
-	//Returns all games that match :name querying thegamesdb api
-	app.get('/games/extra/:name', function(req, res){
-		api.gameList(req.params.name)
-			.then(function(result){
-				res.json(result);
-				result.Data.Game.forEach(function(apiGame){
-					createGame(apiGame);
-				});
-			})
-			.catch(function(reason){
-				console.log(reason);
-				res.json({error: "Error getting info from external api"});
+	//Register a new user {username, email, password}
+	app.post('/users/signup', function(req, res){
+		User.findOne({username: req.body.username})
+			.then((user) => {
+				if(user){
+					res.json({error: 'Username already exists'}).status(400);
+				}
+				else{
+					var newUser = req.body;
+					//Create the newUser
+					newUser.password = createHash(newUser.password);
+					console.log('Registering user: ' + user);
+					User.create(newUser)
+						.then((createdUser) => {
+							var token = authentication.generateToken(createdUser);
+							res.json({token: token});
+						});
+					
+				}
 			});
 	});
 
-	app.post('/games', function(req, res){
-		Game.create(req.body)
-			.then(function(result){
-				res.json(result);
-			})
-			.catch(function(reason){
-				console.log(reason);
-				res.json(reason);
+	app.post('/users/login', function(req, res){
+		User.findOne({username: req.body.username})
+			.then((user) => {
+				if(!user){
+					res.json({error: 'Username does not exist'}).status(400);
+				}
+				else{
+					var validPass = bCrypt.compareSync(req.body.password, user.password);
+					if(!validPass){
+						res.json({error: 'Invalid password'}).status(400);
+					}
+					else{
+						var token = authentication.generateToken(user);
+						res.json({token: token});
+					}
+				}
 			});
 	});
 
-	//Returns all games or filtered by 'name' param if specified
-	app.get('/games', function(req, res){
-		var name = req.query.name;
-		var filter = name ? {name: {$like: '%' + name + '%'}} : {};
-		Game.findAll({
-			attributes: ['id', 'name', 'cover'],
-			where: filter
-		}).then(function(gameList){
-			res.json(gameList);
-		});
-	});
+	app.get('/me', authentication.isAuthenticated, function(req, res){
+		if(req.loggedUser){
+			req.loggedUser.password = undefined;
+			res.json(req.loggedUser);
+		}
+	})
 }
